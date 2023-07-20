@@ -1,12 +1,10 @@
 #! /bin/bash
-# This script generates documentation files for impi, openmpi, intel-oneapi-mpi, and mvapich2 from the latest version from intel from all the clusters under the MPIs folder and then updates index.rst
+# This script generates documentation files for intel-mpi, openmpi, intel-oneapi-mpi, and mvapich2 from the latest version from intel from all the clusters under the MPIs folder and then updates index.rst
 # Example Usage: ./generatempisdocumentationallclusters.sh
 
 declare -a listofmissingfiles=(
-[0]=impi
+[0]=intel-mpi
 [1]=openmpi
-[2]=intel-oneapi-mpi
-[3]=mvapich2
 )
 
 current_dir="$PWD" # save current directory 
@@ -14,16 +12,10 @@ cd ../ # go up one directory
 repo_path="$PWD" # assign path to repo_path
 cd $current_dir # cd back to current directory
 
-export bell="$repo_path/Clusters/xCAT-Bell-Configuration/puppet/modules/common/files/opt/spack/modulefiles"
-export brown="$repo_path/Clusters/xCAT-Brown-Configuration/puppet/modules/common/files/opt/spack/modulefiles"
-export scholar="$repo_path/Clusters/Scholar-Modulefiles/opt/spack/modulefiles"
-export gilbreth="$repo_path/Clusters/xCAT-Gilbreth-Configuration/puppet/modules/common/files/opt/spack/modulefiles"
-export negishi="$repo_path/Clusters/Negishi-Modulefiles/cpu-20221214"
-export anvil1="$repo_path/Clusters/Anvil-Modulefiles/cpu-20211007"
-export anvil2="$repo_path/Clusters/Anvil-Modulefiles/gpu-20211014"
-export workbench="$repo_path/Clusters/xCAT-Workbench-Configuration/puppet/modules/common/files/opt/spack/modulefiles"
+# Assign shortcuts for all cluster paths
+export weber="$repo_path/Clusters/weber/opt/modulefiles"
 
-clusternames=("$bell" "$brown" "$scholar" "$gilbreth" "$negishi" "$anvil1" "$anvil2" "$workbench")
+clusternames=("weber")
 
 # Git pull on all clusters. Uncomment to pull every time the script is run
 # for name in ${clusternames[@]}; do
@@ -145,38 +137,9 @@ function generateLuaFilesIfNew() {
 }
 
 
-clustername=Bell
-luasource=$bell/intel/19.0.5
+clustername=Weber
+luasource=$weber/intel/17.0.1
 generateLuaFilesIfNew
-
-clustername=Brown
-luasource=$brown/intel/19.0.3
-generateLuaFilesIfNew
-
-clustername=Scholar
-luasource=$scholar/intel/19.0.3
-generateLuaFilesIfNew
-
-clustername=Gilbreth
-luasource=$gilbreth/intel/19.0.5
-generateLuaFilesIfNew
-
-clustername=Negishi
-luasource=$negishi/intel/19.1.3
-generateLuaFilesIfNew
-luasource=$negishi/oneapi/2023.0.0
-generateLuaFilesIfNew
-
-clustername=Anvil
-luasource=$anvil1/intel/19.0.5
-generateLuaFilesIfNew
-luasource=$anvil2/intel/19.0.5
-generateLuaFilesIfNew
-
-clustername=Workbench
-luasource=$workbench/intel/19.0.3
-generateLuaFilesIfNew
-
 
 # Update index.rst
 
@@ -185,14 +148,9 @@ cd $repo_path
 
 # subfoldersarray=`ls -d */`
 declare -a subfoldersarray=(
-[0]=FAQs/
-[1]=Compilers/
-[2]=MPIs/
-[3]=Applications/
-[4]=Utilities/
-[5]=Biocontainers/
-[6]=NGC/
-[7]=ROCm/
+[0]=Compilers/
+[1]=MPIs/
+[2]=Applications/
 )
 
 sed -i '/.. toctree::/,$d' $indexfile
@@ -211,13 +169,6 @@ do
         eachfolderwithspaces="${eachfolder//_/ }"
         echo "   "${eachfolderwithspaces::-1} >> $indexfile
         subindexfile=${eachfolderwithspaces::-1}.rst
-        if [ "$eachfolder" == "NGC/" ]; then
-            echo "NVIDIA NGC containers" > $subindexfile
-        elif [ "$eachfolder" == "ROCm/" ]; then
-            echo "AMD ROCm containers" > $subindexfile
-        else
-            echo ${eachfolderwithspaces::-1} > $subindexfile
-        fi
         echo "==============================================" >> $subindexfile
         echo ".. toctree::" >> $subindexfile
         echo "   :titlesonly:" >> $subindexfile
@@ -233,27 +184,6 @@ do
         done 
     fi
 
-    if [ "$eachfolder" == "Biocontainers/" ]; then
-        svn --force -q export https://github.com/PurdueRCAC/Biocontainers/trunk/docs/source
-        rm -r Biocontainers
-        mv -f source Biocontainers
-        echo "each folder : $eachfolder"
-        eachfolderwithspaces="${eachfolder//_/ }"
-        echo "   "${eachfolderwithspaces::-1} >> $indexfile
-        subindexfile=${eachfolderwithspaces::-1}.rst
-        echo ${eachfolderwithspaces::-1} > $subindexfile
-        echo "==============================================" >> $subindexfile
-        echo ".. toctree::" >> $subindexfile
-        echo "   :titlesonly:" >> $subindexfile
-        echo "" >> $subindexfile
-        sourcefolder="$repo_path/$eachfolder"
-        echo "source folder : $sourcefolder"
-        foldernamesarray=`ls "$sourcefolder"`
-        for eachfile in $foldernamesarray
-        do
-            echo "   $eachfolder""$eachfile"/"$eachfile" >> $subindexfile
-        done
-    fi
     
     if [ "$eachfolder" == "Applications/" ]; then
         echo "each folder : $eachfolder"
