@@ -1,3 +1,5 @@
+Scientific Applications on Purdue Weber cluster
+==============================================
 .. toctree::
    :maxdepth: 2
 
